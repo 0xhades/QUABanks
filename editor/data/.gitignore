@@ -1,0 +1,4 @@
+*
+!.gitignore
+!draft_packet.json
+!example_packet.json

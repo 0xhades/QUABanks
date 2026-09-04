@@ -1,0 +1,43 @@
+# Local credentials and Wrangler state
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+.env
+.env.*
+!.env.example
+.wrangler/
+.DS_Store
+.cloudflare/
+
+# Python/Bun dependencies and caches
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+node_modules/
+editor/node_modules/
+.bun/
+
+# Generated render/export state; source fixtures stay tracked
+tmp/
+output/
+editor/data/banks/
+editor/data/render-audit/
+editor/data/exports/
+editor/data/logs/
+test/artifacts/
+container/tmp/
+*.log
+
+# Keep the admin-owned Example and current draft as migration seeds.
+# The nested ignore file also contains these explicit exceptions.
+editor/data/*
+!editor/data/.gitignore
+!editor/data/draft_packet.json
+!editor/data/example_packet.json
+
+# Editor/OS noise
+*.swp
+*.swo

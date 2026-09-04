@@ -1,0 +1,24 @@
+{
+  "name": "quabanks",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "typecheck": "tsc --noEmit",
+    "check:editor": "cd editor && bun run check && bun run check:builder",
+    "test": "node --test test/*.test.mjs",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "db:migrate:remote": "wrangler d1 migrations apply DB --remote",
+    "db:seed:remote": "node scripts/seed-remote.mjs"
+  },
+  "dependencies": {
+    "@cloudflare/containers": "^0.3.7"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "@cloudflare/workers-types": "^5.20260904.1",
+    "typescript": "^5.9.2",
+    "wrangler": "^4.33.0"
+  }
+}

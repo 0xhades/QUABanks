@@ -1,0 +1,8 @@
+# Copy to .dev.vars for local Wrangler development. Never commit .dev.vars.
+SITE_ACCESS_CODE=quabanks-local
+PIN_LOOKUP_SECRET=replace-with-a-long-random-local-secret
+SESSION_SECRET=replace-with-a-different-long-random-local-secret
+EXPORT_INTERNAL_TOKEN=replace-with-a-third-long-random-local-secret
+# Local-only convenience. Production must use a secret set with wrangler secret put.
+AOUNMED_ADMIN_PIN=0000
+INTERNAL_BASE_URL=http://127.0.0.1:8787

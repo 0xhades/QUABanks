@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Packet Foundry · QUABanks editor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fredoka:wght@500;600;700&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;1,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div id="auth-gate" class="auth-gate" hidden>
+      <section class="auth-card" aria-labelledby="auth-title">
+        <div class="auth-card-brand">
+          <div class="brand-mark">A</div>
+          <div>
+            <div class="eyebrow">QUABANKS / PRIVATE WORKSPACE</div>
+            <h2 id="auth-title">Enter the study room</h2>
+          </div>
+        </div>
+        <p id="auth-description" class="auth-description">This workspace is shared with your cohort. Enter the access code to continue.</p>
+
+        <form id="access-form" class="auth-form" novalidate>
+          <label class="field"><span>Shared access code</span><input id="access-code-input" name="code" type="password" autocomplete="one-time-code" required placeholder="Enter the code" /></label>
+          <button class="button button-primary auth-submit" type="submit">Unlock workspace</button>
+        </form>
+
+        <div id="personal-auth" hidden>
+          <div class="auth-mode-tabs" role="tablist" aria-label="Account access">
+            <button id="login-mode-button" class="auth-mode active" data-auth-mode="login" type="button" role="tab" aria-selected="true">Log in</button>
+            <button id="register-mode-button" class="auth-mode" data-auth-mode="register" type="button" role="tab" aria-selected="false">Create account</button>
+          </div>
+          <form id="login-form" class="auth-form" novalidate>
+            <label class="field"><span>Your PIN</span><input id="login-pin-input" name="pin" type="password" inputmode="numeric" autocomplete="current-password" minlength="4" maxlength="8" pattern="[0-9]{4,8}" required placeholder="4–8 digits" /></label>
+            <button class="button button-primary auth-submit" type="submit">Log in</button>
+          </form>
+          <form id="register-form" class="auth-form" hidden novalidate>
+            <label class="field"><span>Display name</span><input id="register-name-input" name="display_name" autocomplete="name" minlength="2" maxlength="60" required placeholder="e.g. Hades" /></label>
+            <label class="field"><span>Choose a unique PIN</span><input id="register-pin-input" name="pin" type="password" inputmode="numeric" autocomplete="new-password" minlength="4" maxlength="8" pattern="[0-9]{4,8}" required placeholder="4–8 digits" /></label>
+            <p class="auth-hint">Your PIN is used to find your account and is never stored as plain text.</p>
+            <button class="button button-primary auth-submit" type="submit">Create account</button>
+          </form>
+        </div>
+        <p id="auth-error" class="auth-error" role="alert" hidden></p>
+        <p class="auth-footnote">Access is limited to invited students. Sessions expire automatically.</p>
+      </section>
+    </div>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand-lockup">
+          <div class="brand-mark">A</div>
+          <div>
+            <div class="eyebrow">QUABANKS / PACKET EDITOR</div>
+            <h1>Packet Foundry</h1>
+          </div>
+        </div>
+        <div class="top-actions">
+          <span id="save-state" class="save-state"><span class="status-dot"></span> sample loaded</span>
+          <div id="user-session-actions" class="user-session-actions" hidden>
+            <span id="user-session-name" class="user-session-name"></span>
+            <button id="logout-button" class="button button-quiet button-small" type="button">Log out</button>
+          </div>
+          <button id="back-banks-button" class="button button-quiet" type="button" hidden>← Banks</button>
+          <div id="editor-actions" class="editor-actions" hidden>
+            <button id="reset-button" class="button button-quiet" type="button">Reset draft</button>
+            <button id="save-button" class="button button-secondary" type="button">Save draft</button>
+            <button id="pptx-button" class="button button-secondary" type="button">Save as PPTX</button>
+            <button id="render-button" class="button button-primary" type="button">Render PDF</button>
+          </div>
+        </div>
+      </header>
+
+      <main id="bank-home" class="bank-home">
+        <section class="bank-home-hero">
+          <div class="bank-home-copy">
+            <span class="eyebrow">QUESTION BANK BUILDER</span>
+            <h2>Start with a bank.</h2>
+            <p>Choose an existing packet or create a new one. Shape lectures, sections, questions, images, and hints into a clean printable paper.</p>
+          </div>
+          <div class="bank-home-actions">
+            <button id="create-bank-button" class="button button-primary" type="button">+ Create bank</button>
+            <label class="button button-secondary import-label" for="home-import-input">Import packet</label>
+            <input id="home-import-input" type="file" accept="application/json,.json" hidden />
+          </div>
+        </section>
+
+        <form id="new-bank-form" class="new-bank-form panel" hidden>
+          <div>
+            <span class="eyebrow">NEW PACKET</span>
+            <h3>Name your question bank</h3>
+            <p class="subtle">It starts with one editable lecture and two placeholder choices. You can replace or remove them in the editor.</p>
+          </div>
+          <div class="field-grid">
+            <label class="field"><span>Bank title</span><input id="new-bank-title" name="title" required placeholder="e.g. MED45 · Week 2 banks" /></label>
+            <label class="field"><span>Week / label</span><input id="new-bank-week" name="week" value="WEEK 1" placeholder="e.g. WEEK 2" /></label>
+          </div>
+          <label class="field"><span>Description</span><textarea id="new-bank-description" name="description" placeholder="What does this bank contain?"></textarea></label>
+          <div class="new-bank-actions">
+            <button id="cancel-create-bank-button" class="button button-quiet" type="button">Cancel</button>
+            <button class="button button-primary" type="submit">Create and open editor</button>
+          </div>
+        </form>
+
+        <section class="bank-stats" aria-label="Bank summary">
+          <div class="bank-stat"><span class="eyebrow">BANKS</span><strong id="home-bank-count">—</strong><small>available packets</small></div>
+          <div class="bank-stat"><span class="eyebrow">LECTURES</span><strong id="home-lecture-count">—</strong><small>across the catalog</small></div>
+          <div class="bank-stat"><span class="eyebrow">QUESTIONS</span><strong id="home-question-count">—</strong><small>ready to shape</small></div>
+        </section>
+
+        <section class="bank-library">
+          <div class="bank-library-heading"><div><span class="eyebrow">YOUR LIBRARY</span><h2>Question banks</h2></div><span id="bank-library-label" class="preview-label">loading catalog…</span></div>
+          <div id="bank-list" class="bank-grid"><div class="bank-loading panel">Loading your banks…</div></div>
+        </section>
+      </main>
+
+      <div id="editor-view" hidden>
+      <section class="pipeline" aria-label="Packet pipeline">
+        <div class="pipeline-step active"><span>01</span><div><strong>Source</strong><small>normalized JSON</small></div></div>
+        <div class="pipeline-line"></div>
+        <div class="pipeline-step active"><span>02</span><div><strong>Organize</strong><small>sections &amp; questions</small></div></div>
+        <div class="pipeline-line"></div>
+        <div class="pipeline-step active"><span>03</span><div><strong>Review</strong><small>notes &amp; provenance</small></div></div>
+        <div class="pipeline-line"></div>
+        <div id="pipeline-render" class="pipeline-step"><span>04</span><div><strong>Publish</strong><small>PDF preview</small></div></div>
+      </section>
+
+      <nav class="mobile-workspace-tabs" role="tablist" aria-label="Editor workspace">
+        <button class="mobile-tab active" role="tab" data-action="mobile-pane" data-pane="tree" type="button" aria-controls="tree-pane" aria-selected="true"><span>01</span>Tree</button>
+        <button class="mobile-tab" role="tab" data-action="mobile-pane" data-pane="editor" type="button" aria-controls="edit-pane" aria-selected="false"><span>02</span>Edit</button>
+        <button class="mobile-tab" role="tab" data-action="mobile-pane" data-pane="preview" type="button" aria-controls="preview-pane" aria-selected="false"><span>03</span>Preview</button>
+      </nav>
+
+      <main class="workspace">
+        <aside id="tree-pane" class="navigator panel" role="tabpanel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">CONTENT TREE</span>
+              <h2>Lectures</h2>
+            </div>
+            <button id="add-lecture-button" class="icon-button" type="button" title="Add lecture">+</button>
+          </div>
+          <label class="search-box">
+            <span>⌕</span>
+            <input id="search-input" type="search" placeholder="Find a lecture or question" autocomplete="off" />
+          </label>
+          <div id="section-list" class="section-list"></div>
+          <div class="nav-footer">
+            <div class="legend-item"><span class="legend-swatch source"></span> source material</div>
+            <div class="legend-item"><span class="legend-swatch hint"></span> optional hints</div>
+          </div>
+        </aside>
+
+        <section id="edit-pane" class="editor-column" role="tabpanel">
+          <div class="editor-toolbar">
+            <div>
+              <span class="eyebrow">STRUCTURED EDITOR</span>
+              <h2 id="editor-title">Select a lecture</h2>
+            </div>
+            <div class="toolbar-actions">
+              <button id="add-section-button" class="button button-secondary" type="button">+ Section</button>
+              <button id="add-question-button" class="button button-secondary" type="button">+ Question</button>
+              <button id="download-json-button" class="button button-quiet" type="button">Download JSON</button>
+              <label class="button button-quiet import-label" for="import-json-input">Import JSON</label>
+              <input id="import-json-input" type="file" accept="application/json,.json" hidden />
+              <label class="button button-quiet import-label" for="import-lecture-input">Add lecture.json</label>
+              <input id="import-lecture-input" type="file" accept="application/json,.json" hidden />
+            </div>
+          </div>
+          <div id="editor-form" class="editor-form panel"></div>
+        </section>
+
+        <aside id="preview-pane" class="preview-column" role="tabpanel">
+          <div class="preview-heading">
+            <div>
+              <span class="eyebrow">LIVE PAPER</span>
+              <h2>Page preview</h2>
+            </div>
+            <span id="preview-label" class="preview-label">select a question</span>
+          </div>
+          <div id="paper-preview" class="paper-preview">
+            <div class="empty-preview">Choose a lecture and question to see the Week 1 paper treatment.</div>
+          </div>
+          <div class="preview-footer">
+            <span><span class="status-dot"></span> deterministic layout</span>
+            <span id="preview-count">0 questions</span>
+          </div>
+        </aside>
+      </main>
+      </div>
+
+      <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    </div>
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>

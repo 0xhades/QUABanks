@@ -1,0 +1,446 @@
+{
+  "schema_version": "pdf-template-v1",
+  "document": {
+    "title": "MED45",
+    "week": "WEEK 1",
+    "subtitle": "Tutor-generated review packet",
+    "output_name": "week1-template-demo.pdf",
+    "closing_page": {
+      "paragraphs": [
+        "اللهم افتح لي أبواب حكمتك، وانشر عليّ من رحمتك، وعلّمني ما ينفعني، ولا تنسني ما علّمتني، وسهّل عليّ ما استصعبته يا أرحم الراحمين.",
+        "اللهم اجعل علمي نافعًا، وصدري منشرحًا، وذهني حاضرًا، واحفظ عليّ ما تعلمت، ووفقني لما تحب وترضى."
+      ],
+      "signoff": "دعواتكم لنا :D"
+    },
+    "lectures": [
+      {
+        "id": "lecture-anatomy",
+        "title": "Anatomy",
+        "description": "Head, neck, and temporomandibular-region review questions.",
+        "sections": [
+          {
+            "id": "anatomy-scalp-face",
+            "title": "Anatomy: Scalp and face",
+            "layout": "mcq_two_column",
+            "hints": [
+              {
+                "id": "scalp-hint-dangerous-layer",
+                "title": "Trace the route, not only the layer",
+                "text": "Recall which scalp layer permits movement and contains emissary veins, then follow those veins toward the intracranial dural sinuses.",
+                "source_refs": [
+                  {
+                    "lecture_id": "lecture-scalp-face",
+                    "lecture_title": "Anatomy of the Scalp and Face",
+                    "slide_numbers": [
+                      7,
+                      8
+                    ]
+                  }
+                ]
+              }
+            ],
+            "questions": [
+              {
+                "id": "scalp-q1",
+                "number": 1,
+                "type": "mcq",
+                "case": "A student reviews the layers of the scalp after a blunt head injury.",
+                "stem": "Which scalp layer is classically called the dangerous area because infection can spread through emissary veins?",
+                "options": [
+                  {
+                    "label": "A",
+                    "text": "Skin"
+                  },
+                  {
+                    "label": "B",
+                    "text": "Dense connective tissue"
+                  },
+                  {
+                    "label": "C",
+                    "text": "Loose areolar tissue"
+                  },
+                  {
+                    "label": "D",
+                    "text": "Pericranium"
+                  }
+                ],
+                "answer": "C",
+                "lecture_refs": [
+                  {
+                    "lecture_id": "lecture-scalp-face",
+                    "lecture_title": "Anatomy of the Scalp and Face",
+                    "slide_numbers": [
+                      7
+                    ]
+                  }
+                ],
+                "bank_source": {
+                  "bank_id": "med44-w1-eob",
+                  "name": "MED44 Banks — W1 8 Locomotor #EOB",
+                  "question_number": 127,
+                  "page_numbers": [
+                    28
+                  ]
+                },
+                "notes": [
+                  {
+                    "kind": "note",
+                    "text": "Focus on the venous communication that makes this layer clinically important."
+                  }
+                ],
+                "explanation": "Loose areolar tissue allows infection or blood to spread and contains emissary veins that communicate with intracranial venous sinuses.",
+                "media": []
+              },
+              {
+                "id": "scalp-q2",
+                "number": 2,
+                "type": "mcq",
+                "stem": "Which vessel provides the most direct venous route from the facial danger triangle toward the cavernous sinus?",
+                "options": [
+                  {
+                    "label": "A",
+                    "text": "Facial vein through the ophthalmic veins"
+                  },
+                  {
+                    "label": "B",
+                    "text": "External jugular vein"
+                  },
+                  {
+                    "label": "C",
+                    "text": "Retromandibular vein"
+                  },
+                  {
+                    "label": "D",
+                    "text": "Posterior auricular vein"
+                  }
+                ],
+                "answer": "A",
+                "source_refs": [
+                  "Scalp lecture, slide 27"
+                ],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "scalp-q3",
+                "number": 3,
+                "type": "mcq",
+                "stem": "Loss of forehead wrinkling most directly indicates injury to which motor branch?",
+                "options": [
+                  {
+                    "label": "A",
+                    "text": "Temporal branch of the facial nerve"
+                  },
+                  {
+                    "label": "B",
+                    "text": "Supraorbital nerve"
+                  },
+                  {
+                    "label": "C",
+                    "text": "Supratrochlear nerve"
+                  },
+                  {
+                    "label": "D",
+                    "text": "Zygomaticofacial nerve"
+                  }
+                ],
+                "answer": "A",
+                "source_refs": [
+                  "Scalp lecture, slide 20"
+                ],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "scalp-q4",
+                "number": 4,
+                "type": "mcq",
+                "stem": "Blood collecting beneath the epicranial aponeurosis occupies which layer?",
+                "options": [
+                  {
+                    "label": "A",
+                    "text": "Dermis"
+                  },
+                  {
+                    "label": "B",
+                    "text": "Dense connective tissue"
+                  },
+                  {
+                    "label": "C",
+                    "text": "Loose areolar tissue"
+                  },
+                  {
+                    "label": "D",
+                    "text": "Pericranium"
+                  }
+                ],
+                "answer": "C",
+                "source_refs": [
+                  "Scalp lecture, slide 41"
+                ],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "scalp-q5",
+                "number": 5,
+                "type": "mcq",
+                "stem": "Which sensory nerve supplies the central forehead?",
+                "options": [
+                  {
+                    "label": "A",
+                    "text": "Supraorbital nerve"
+                  },
+                  {
+                    "label": "B",
+                    "text": "Buccal nerve"
+                  },
+                  {
+                    "label": "C",
+                    "text": "Mental nerve"
+                  },
+                  {
+                    "label": "D",
+                    "text": "Auriculotemporal nerve"
+                  }
+                ],
+                "answer": "A",
+                "source_refs": [
+                  "Scalp lecture, slide 17"
+                ],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "scalp-q6",
+                "number": 6,
+                "type": "mcq",
+                "stem": "Which layer forms the fibromuscular sheet that includes occipitofrontalis?",
+                "options": [
+                  {
+                    "label": "A",
+                    "text": "Skin"
+                  },
+                  {
+                    "label": "B",
+                    "text": "Epicranial aponeurosis"
+                  },
+                  {
+                    "label": "C",
+                    "text": "Loose areolar tissue"
+                  },
+                  {
+                    "label": "D",
+                    "text": "Pericranium"
+                  }
+                ],
+                "answer": "B",
+                "source_refs": [
+                  "Scalp lecture, slide 9"
+                ],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "scalp-q7",
+                "number": 7,
+                "type": "multi_select",
+                "stem": "Select all structures that provide sensory innervation to the forehead.",
+                "options": [
+                  {
+                    "label": "A",
+                    "text": "Supraorbital nerve"
+                  },
+                  {
+                    "label": "B",
+                    "text": "Supratrochlear nerve"
+                  },
+                  {
+                    "label": "C",
+                    "text": "Buccal nerve"
+                  },
+                  {
+                    "label": "D",
+                    "text": "Mental nerve"
+                  }
+                ],
+                "correct_answers": [
+                  "A",
+                  "B"
+                ],
+                "source_refs": [
+                  "Scalp lecture, slide 17"
+                ],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              }
+            ]
+          },
+          {
+            "id": "neck-ospe",
+            "title": "Anatomy: Neck OSPE",
+            "layout": "seq_single_column",
+            "questions": [
+              {
+                "id": "neck-ospe-008",
+                "number": 8,
+                "type": "ospe",
+                "case": "Use the provided labeled anatomical specimen.",
+                "stem": "Identify the structure marked X.",
+                "answer": "Digastric muscle",
+                "explanation": "The marker points to the digastric region beneath the mandible; confirm the exact belly using the specimen orientation.",
+                "lecture_refs": [
+                  {
+                    "lecture_id": "lecture-neck",
+                    "lecture_title": "Neck",
+                    "slide_numbers": [
+                      26
+                    ]
+                  }
+                ],
+                "bank_source": {
+                  "bank_id": "med44-ospe",
+                  "name": "MED44 Banks — All OSPE 43 UPDATED",
+                  "question_number": 8,
+                  "page_numbers": [
+                    4
+                  ]
+                },
+                "notes": [
+                  {
+                    "kind": "instruction",
+                    "text": "Use the marker and the visible mandibular relationship before naming the structure."
+                  }
+                ],
+                "media": [
+                  {
+                    "path": "assets/sample/neck-ospe-x.png",
+                    "alt_text": "Head-and-neck anatomical specimen with a black marker labeled X beneath the mandible.",
+                    "caption": "Tutor content sample: anatomical specimen with the target marked X."
+                  }
+                ],
+                "options": []
+              }
+            ],
+            "hints": []
+          },
+          {
+            "id": "tmj-seqs",
+            "title": "Anatomy: Temporal fossa, infratemporal fossa & TMJ",
+            "layout": "seq_single_column",
+            "questions": [
+              {
+                "id": "tmj-seq1",
+                "number": 1,
+                "type": "seq",
+                "stem": "Describe the temporomandibular joint regarding its type, articular surfaces, ligaments, movements, and articular disc.",
+                "source_refs": [
+                  "TMJ lecture, slides 20-24"
+                ],
+                "options": [],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "tmj-seq2",
+                "number": 2,
+                "type": "seq",
+                "stem": "Name the muscles of mastication and state the principal action and nerve supply of each.",
+                "source_refs": [
+                  "TMJ lecture, slides 13-17"
+                ],
+                "options": [],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "tmj-seq3",
+                "number": 3,
+                "type": "seq",
+                "stem": "List the contents of the infratemporal fossa and organize them by vessels, nerves, muscles, and ligaments.",
+                "source_refs": [
+                  "TMJ lecture, slide 11"
+                ],
+                "options": [],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "tmj-seq4",
+                "number": 4,
+                "type": "other",
+                "stem": "Explain how the articular disc divides the TMJ and relate each compartment to rotation and translation.",
+                "answer": "The disc creates upper and lower synovial compartments; translation occurs mainly in the upper compartment and rotation mainly in the lower compartment.",
+                "source_refs": [
+                  "TMJ lecture, slides 20-23"
+                ],
+                "options": [],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              }
+            ],
+            "hints": []
+          }
+        ]
+      },
+      {
+        "id": "lecture-pharmacology",
+        "title": "Pharmacology",
+        "description": "Topical therapy reasoning questions.",
+        "sections": [
+          {
+            "id": "topical-steroids",
+            "title": "Pharmacology: Topical steroids",
+            "layout": "explain_why",
+            "questions": [
+              {
+                "id": "steroid-why1",
+                "number": 1,
+                "type": "explain_why",
+                "stem": "Why is an ointment commonly preferred over a gel for a dry atopic lesion?",
+                "answer": "Ointments are occlusive, increase hydration of the stratum corneum, and can enhance drug penetration.",
+                "options": [],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "steroid-why2",
+                "number": 2,
+                "type": "explain_why",
+                "stem": "Why should topical corticosteroids be used cautiously on infected skin?",
+                "answer": "Their local immunosuppressive effect can mask or worsen infection unless the infection is treated appropriately.",
+                "options": [],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              },
+              {
+                "id": "steroid-why3",
+                "number": 3,
+                "type": "explain_why",
+                "stem": "Why should a potent topical corticosteroid not be used as a general moisturizer?",
+                "answer": "Unnecessary exposure increases the risk of local adverse effects and systemic absorption without providing routine emollient care.",
+                "options": [],
+                "notes": [],
+                "media": [],
+                "lecture_refs": []
+              }
+            ],
+            "hints": []
+          }
+        ]
+      }
+    ]
+  }
+}
