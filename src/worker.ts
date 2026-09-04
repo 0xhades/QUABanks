@@ -1,5 +1,5 @@
 import seedPacket from "../editor/data/example_packet.json";
-import { Container } from "@cloudflare/containers";
+import { Container, getRandom } from "@cloudflare/containers";
 
 type Role = "admin" | "contributor";
 type User = { id: string; display_name: string; role: Role };
@@ -9,7 +9,7 @@ interface Env {
   DB: D1Database;
   MEDIA: R2Bucket;
   EXPORT_QUEUE: Queue;
-  EXPORT_CONTAINER: DurableObjectNamespace;
+  EXPORT_CONTAINER: DurableObjectNamespace<ExportContainer>;
   ASSETS: Fetcher;
   SITE_ACCESS_CODE?: string;
   SITE_ACCESS_DIGEST?: string;
@@ -34,6 +34,11 @@ const MAX_PIN_LENGTH = 8;
 // the same time.  The Queue consumer retries fresh running rows until this
 // lease expires.
 const EXPORT_LEASE_MS = 15 * 60_000;
+// Keep the routing pool exactly aligned with wrangler's container capacity.
+// Export job IDs must not be used as Container Durable Object IDs: doing so
+// creates one live container per job and exhausts max_instances after two jobs.
+const EXPORT_CONTAINER_POOL_SIZE = 2;
+const EXPORT_MAX_ATTEMPTS = 3;
 
 function now(): string { return new Date().toISOString(); }
 function parseJson<T>(value: string | null | undefined, fallback: T): T {
@@ -484,6 +489,7 @@ async function createExport(request: Request, env: Env, user: User, format: "pdf
   ]);
   try {
     await env.EXPORT_QUEUE.send({ job_id: jobId } satisfies ExportMessage);
+    console.log({ event: "export_queued", job_id: jobId, bank_id: bankId, format });
   } catch (caught) {
     const messageText = caught instanceof Error ? caught.message : "could not enqueue export";
     await env.DB.prepare("UPDATE export_jobs SET status = 'failed', error = ?, updated_at = ? WHERE id = ?").bind(messageText.slice(0, 1000), now(), jobId).run();
@@ -504,7 +510,8 @@ async function retryExport(request: Request, env: Env, user: User, id: string): 
   if (!row) return error("export job not found", 404);
   if (user.role !== "admin" && row.requested_by !== user.id) return error("you can only retry your own exports", 403);
   if (row.status !== "failed") return error("only failed exports can be retried", 409);
-  await env.DB.prepare("UPDATE export_jobs SET status = 'queued', error = NULL, updated_at = ? WHERE id = ? AND status = 'failed'").bind(now(), id).run();
+  const reset = await env.DB.prepare("UPDATE export_jobs SET status = 'queued', attempts = 0, error = NULL, updated_at = ? WHERE id = ? AND status = 'failed'").bind(now(), id).run();
+  if (!Number(reset.meta?.changes || 0)) return error("export is already being retried", 409);
   try {
     await env.EXPORT_QUEUE.send({ job_id: id } satisfies ExportMessage);
   } catch (caught) {
@@ -569,29 +576,36 @@ async function processExport(message: ExportMessage, env: Env): Promise<"ack" | 
     WHERE id = ? AND (status IN ('queued', 'failed') OR (status = 'running' AND updated_at <= ?))
   `).bind(now(), row.id, leaseCutoff).run();
   if (!Number(claim.meta?.changes || 0)) return "ack";
+  const attempt = Number(row.attempts || 0) + 1;
+  console.log({ event: "export_started", job_id: row.id, format: row.format, attempt });
   try {
     if (!env.INTERNAL_BASE_URL) throw new Error("INTERNAL_BASE_URL is not configured");
-    const id = env.EXPORT_CONTAINER.idFromName(row.id);
-    const container = env.EXPORT_CONTAINER.get(id);
+    const container = await getRandom(env.EXPORT_CONTAINER, EXPORT_CONTAINER_POOL_SIZE);
     const snapshot = await env.MEDIA.get(`snapshots/${row.id}.json`);
     if (!snapshot) throw new Error("snapshot missing");
     const input = await snapshot.json<any>();
     const response = await container.fetch("http://export-container/jobs", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ ...input, callback_base: env.INTERNAL_BASE_URL, callback_token: env.EXPORT_INTERNAL_TOKEN }) });
-    const result = await response.json().catch(() => ({})) as any;
-    if (!response.ok || result.status !== "completed") throw new Error(text(result.error) || `container returned HTTP ${response.status}`);
+    const responseText = await response.text();
+    const result = parseJson<any>(responseText, {});
+    if (!response.ok || result.status !== "completed") {
+      const detail = text(result.error) || text(responseText).slice(0, 1000) || `container returned HTTP ${response.status}`;
+      throw new Error(`container returned HTTP ${response.status}: ${detail}`);
+    }
     await env.DB.prepare("UPDATE export_jobs SET status = 'completed', updated_at = ?, error = NULL WHERE id = ?").bind(now(), row.id).run();
+    console.log({ event: "export_completed", job_id: row.id, format: row.format, attempt });
   } catch (caught) {
     const messageText = caught instanceof Error ? caught.message : "export failed";
-    const attempt = Number(row.attempts || 0) + 1;
     // Renderer/container/network failures are normally transient.  Let the
     // Queue redeliver a bounded number of times, while keeping deterministic
     // input errors terminal so a bad packet does not spin forever.
     const permanent = /snapshot missing|invalid job payload|unsafe asset path|asset download failed|renderer failed|invalid packet|not configured/i.test(messageText);
-    if (!permanent && attempt < 3) {
+    if (!permanent && attempt < EXPORT_MAX_ATTEMPTS) {
       await env.DB.prepare("UPDATE export_jobs SET status = 'queued', error = ?, updated_at = ? WHERE id = ?").bind(messageText.slice(0, 1000), now(), row.id).run();
+      console.warn({ event: "export_retry_scheduled", job_id: row.id, format: row.format, attempt, error: messageText.slice(0, 1000) });
       throw caught;
     }
     await env.DB.prepare("UPDATE export_jobs SET status = 'failed', error = ?, updated_at = ? WHERE id = ?").bind(messageText.slice(0, 1000), now(), row.id).run();
+    console.error({ event: "export_failed", job_id: row.id, format: row.format, attempt, permanent, error: messageText.slice(0, 1000) });
   }
   return "ack";
 }
@@ -599,6 +613,19 @@ async function processExport(message: ExportMessage, env: Env): Promise<"ack" | 
 export class ExportContainer extends Container {
   defaultPort = 8787;
   sleepAfter = "10m";
+
+  override onStart(): void {
+    console.log({ event: "export_container_started", container_id: this.ctx.id.toString() });
+  }
+
+  override onStop(params: { exitCode: number; reason: "exit" | "runtime_signal" }): void {
+    console.log({ event: "export_container_stopped", container_id: this.ctx.id.toString(), ...params });
+  }
+
+  override onError(caught: unknown): void {
+    const message = caught instanceof Error ? caught.message : String(caught);
+    console.error({ event: "export_container_error", container_id: this.ctx.id.toString(), error: message });
+  }
 }
 
 function isStatic(request: Request): boolean {

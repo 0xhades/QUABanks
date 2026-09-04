@@ -4,9 +4,10 @@ import { readFile } from "node:fs/promises";
 
 const root = new URL("..", import.meta.url);
 const read = (name) => readFile(new URL(name, root), "utf8");
+const parseJsonc = (value) => JSON.parse(value.replace(/,\s*([}\]])/g, "$1"));
 
 test("Cloudflare bindings and export boundaries stay declared", async () => {
-  const config = JSON.parse(await read("wrangler.jsonc"));
+  const config = parseJsonc(await read("wrangler.jsonc"));
   assert.equal(config.main, "src/worker.ts");
   assert.equal(config.assets.binding, "ASSETS");
   assert.equal(config.d1_databases[0].binding, "DB");
@@ -15,6 +16,10 @@ test("Cloudflare bindings and export boundaries stay declared", async () => {
   assert.equal(config.durable_objects.bindings[0].class_name, "ExportContainer");
   assert.equal(config.containers[0].max_instances, 2);
   assert.equal(config.containers[0].instance_type, "basic");
+  assert.equal(config.queues.consumers[0].max_concurrency, 2);
+  const worker = await read("src/worker.ts");
+  assert.match(worker, /getRandom\(env\.EXPORT_CONTAINER, EXPORT_CONTAINER_POOL_SIZE\)/);
+  assert.doesNotMatch(worker, /idFromName\(row\.id\)/);
 });
 
 test("the preserved Example packet has stable nested lecture content", async () => {

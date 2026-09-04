@@ -16,6 +16,8 @@ const state = {
   session: null,
   authStage: "access",
   authMode: "login",
+  exportBusy: { pdf: false, pptx: false },
+  exportRuns: { pdf: 0, pptx: 0 },
 };
 
 const $ = (selector) => document.querySelector(selector);
@@ -157,6 +159,7 @@ async function apiFetch(input, init = {}) {
 }
 
 function setShellView(view) {
+  if (state.view !== view) cancelActiveExports();
   state.view = view;
   const inEditor = view === "editor";
   const home = $("#bank-home");
@@ -241,6 +244,7 @@ function showCreateBankForm(show = true) {
 }
 
 async function openBank(bankId) {
+  cancelActiveExports();
   const response = await apiFetch(`/api/banks/${encodeURIComponent(bankId)}`, { cache: "no-store" });
   const data = await response.json();
   if (!response.ok) throw new Error(data.error || "could not open bank");
@@ -259,6 +263,7 @@ async function openBank(bankId) {
 
 async function showHome(options = {}) {
   if (state.view === "editor" && state.dirty && !options.force && !window.confirm("You have unsaved changes. Return to the bank list and discard them?")) return;
+  cancelActiveExports();
   state.view = "home";
   state.dirty = false;
   setShellView("home");
@@ -974,11 +979,60 @@ async function saveDraft(showMessage = true) {
   if (showMessage) toast(state.bankId ? "Bank saved locally" : "Draft saved separately from sample_packet.json");
 }
 
-async function waitForExport(statusUrl, format, label) {
-  const deadline = Date.now() + 15 * 60_000;
+function exportButton(format) {
+  return format === "pdf" ? $("#render-button") : $("#pptx-button");
+}
+
+function idleExportLabel(format) {
+  return format === "pdf" ? "Render PDF" : "Save as PPTX";
+}
+
+function beginExport(format) {
+  if (state.exportBusy[format]) return null;
+  state.exportBusy[format] = true;
+  const run = ++state.exportRuns[format];
+  const button = exportButton(format);
+  if (button) {
+    button.disabled = true;
+    button.textContent = format === "pdf" ? "Preparing PDF…" : "Preparing PPTX…";
+  }
+  return { format, run, bankId: state.bankId };
+}
+
+function exportIsCurrent(context) {
+  return context && state.exportRuns[context.format] === context.run && state.bankId === context.bankId;
+}
+
+function finishExport(context) {
+  if (!context || state.exportRuns[context.format] !== context.run) return;
+  state.exportBusy[context.format] = false;
+  const button = exportButton(context.format);
+  if (button) {
+    button.disabled = false;
+    button.textContent = idleExportLabel(context.format);
+  }
+}
+
+function cancelActiveExports() {
+  for (const format of ["pdf", "pptx"]) {
+    state.exportRuns[format] += 1;
+    state.exportBusy[format] = false;
+    const button = exportButton(format);
+    if (button) {
+      button.disabled = false;
+      button.textContent = idleExportLabel(format);
+    }
+  }
+}
+
+async function waitForExport(statusUrl, format, label, context) {
+  const deadline = Date.now() + 30 * 60_000;
   while (Date.now() < deadline) {
+    if (!exportIsCurrent(context)) return null;
     const response = await apiFetch(statusUrl, { cache: "no-store" });
+    if (!exportIsCurrent(context)) return null;
     const data = await response.json().catch(() => ({}));
+    if (!exportIsCurrent(context)) return null;
     if (!response.ok) throw new Error(data.error || `${label} status could not be read`);
     const job = data.job || {};
     if (job.status === "completed") {
@@ -987,9 +1041,14 @@ async function waitForExport(statusUrl, format, label) {
       return url;
     }
     if (job.status === "failed") throw new Error(job.error || `${label} failed in the export container`);
-    const suffix = job.status === "running" ? "Rendering…" : "Queued…";
-    if (format === "pdf") $("#render-button").textContent = suffix;
-    else $("#pptx-button").textContent = suffix;
+    const attempt = Number(job.attempts || 0);
+    const suffix = job.status === "running"
+      ? `Rendering ${format.toUpperCase()}…`
+      : attempt > 0
+        ? `Retrying ${format.toUpperCase()} (${Math.min(attempt + 1, 3)}/3)…`
+        : `Queued ${format.toUpperCase()}…`;
+    const button = exportButton(format);
+    if (button) button.textContent = suffix;
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
   throw new Error(`${label} timed out while waiting for the export worker`);
@@ -1008,37 +1067,41 @@ function openOrDownload(url, filename, newTab = false) {
 }
 
 async function renderPdf() {
-  await saveDraft(false);
-  const button = $("#render-button");
-  button.disabled = true; button.textContent = "Rendering…";
+  const context = beginExport("pdf");
+  if (!context) return;
   try {
+    await saveDraft(false);
+    if (!exportIsCurrent(context)) return;
     const response = await apiFetch("/api/render", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bank_id: state.bankId, revision: state.bank?.revision, packet: state.packet }) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || data.error_detail || "renderer rejected this packet");
     $("#pipeline-render").classList.add("active");
-    const url = data.preview_url || (data.status_url ? await waitForExport(data.status_url, "pdf", "PDF export") : null);
+    const url = data.preview_url || (data.status_url ? await waitForExport(data.status_url, "pdf", "PDF export", context) : null);
+    if (!exportIsCurrent(context)) return;
     if (!url) throw new Error("PDF export completed without a preview URL");
     toast("PDF rendered. Opening the deterministic preview…");
     openOrDownload(url, `${slug(rootDocument()?.title || "question-packet")}.pdf`, true);
   } finally {
-    button.disabled = false; button.textContent = "Render PDF";
+    finishExport(context);
   }
 }
 
 async function exportPptx() {
-  await saveDraft(false);
-  const button = $("#pptx-button");
-  button.disabled = true; button.textContent = "Building PPTX…";
+  const context = beginExport("pptx");
+  if (!context) return;
   try {
+    await saveDraft(false);
+    if (!exportIsCurrent(context)) return;
     const response = await apiFetch("/api/export-pptx", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ bank_id: state.bankId, revision: state.bank?.revision, packet: state.packet }) });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || data.error_detail || "editable PowerPoint export failed");
-    const url = data.download_url || data.preview_url || (data.status_url ? await waitForExport(data.status_url, "pptx", "PowerPoint export") : null);
+    const url = data.download_url || data.preview_url || (data.status_url ? await waitForExport(data.status_url, "pptx", "PowerPoint export", context) : null);
+    if (!exportIsCurrent(context)) return;
     if (!url) throw new Error("PowerPoint export completed without a download URL");
     openOrDownload(url, `${slug(rootDocument()?.title || "question-packet")}-editable.pptx`);
     toast("Editable PPTX downloaded");
   } finally {
-    button.disabled = false; button.textContent = "Save as PPTX";
+    finishExport(context);
   }
 }
 
@@ -1402,8 +1465,8 @@ $("#add-lecture-button").addEventListener("click", addLecture);
 $("#add-section-button").addEventListener("click", addSection);
 $("#add-question-button").addEventListener("click", addQuestion);
 $("#save-button").addEventListener("click", () => saveDraft().catch((error) => toast(error.message, true)));
-$("#pptx-button").addEventListener("click", () => exportPptx().catch((error) => { toast(error.message, true); $("#pptx-button").disabled = false; $("#pptx-button").textContent = "Save as PPTX"; }));
-$("#render-button").addEventListener("click", () => renderPdf().catch((error) => { toast(error.message, true); $("#render-button").disabled = false; $("#render-button").textContent = "Render PDF"; }));
+$("#pptx-button").addEventListener("click", () => exportPptx().catch((error) => toast(error.message, true)));
+$("#render-button").addEventListener("click", () => renderPdf().catch((error) => toast(error.message, true)));
 $("#reset-button").addEventListener("click", () => resetDraft().catch((error) => toast(error.message, true)));
 $("#download-json-button").addEventListener("click", downloadJson);
 $("#import-json-input").addEventListener("change", (event) => { const [file] = event.target.files; if (file) importJson(file).catch((error) => toast(error.message, true)); event.target.value = ""; });

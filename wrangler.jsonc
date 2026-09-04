@@ -6,52 +6,69 @@
   "assets": {
     "binding": "ASSETS",
     "directory": "./editor/public",
-    "not_found_handling": "single-page-application"
+    "not_found_handling": "single-page-application",
   },
   "d1_databases": [
     {
       "binding": "DB",
       "database_name": "quabanks",
       "database_id": "83cf9297-d8d3-4c7d-a288-e5d6f07c7117",
-      "migrations_dir": "migrations"
-    }
+      "migrations_dir": "migrations",
+    },
   ],
   "r2_buckets": [
     {
       "binding": "MEDIA",
-      "bucket_name": "quabanks-media"
-    }
+      "bucket_name": "quabanks-media",
+    },
   ],
   "queues": {
-    "producers": [
-      { "binding": "EXPORT_QUEUE", "queue": "quabanks-exports" }
-    ],
+    "producers": [{ "binding": "EXPORT_QUEUE", "queue": "quabanks-exports" }],
     "consumers": [
-      { "queue": "quabanks-exports", "max_batch_size": 1, "max_batch_timeout": 5, "max_retries": 100 }
-    ]
+      {
+        "queue": "quabanks-exports",
+        "max_batch_size": 1,
+        "max_batch_timeout": 5,
+        "max_retries": 100,
+        "max_concurrency": 2,
+      },
+    ],
+  },
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "head_sampling_rate": 1,
+      "invocation_logs": true,
+      "persist": true,
+    },
+    "traces": {
+      "enabled": false,
+      "head_sampling_rate": 1,
+      "persist": true,
+    },
   },
   "durable_objects": {
     "bindings": [
-      { "name": "EXPORT_CONTAINER", "class_name": "ExportContainer" }
-    ]
+      { "name": "EXPORT_CONTAINER", "class_name": "ExportContainer" },
+    ],
   },
   "containers": [
     {
       "class_name": "ExportContainer",
       "image": "./Dockerfile",
       "instance_type": "basic",
-      "max_instances": 2
-    }
+      "max_instances": 2,
+    },
   ],
   "migrations": [
     {
       "tag": "v1",
-      "new_sqlite_classes": ["ExportContainer"]
-    }
+      "new_sqlite_classes": ["ExportContainer"],
+    },
   ],
   "vars": {
     "APP_NAME": "QUABanks",
     "INTERNAL_BASE_URL": "https://quabanks.onlyghostz.workers.dev",
-    "EXPORT_CONTAINER_PORT": "8787"
-  }
+    "EXPORT_CONTAINER_PORT": "8787",
+  },
 }

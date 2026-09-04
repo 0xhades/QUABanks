@@ -282,3 +282,22 @@ three panes. Traceability is rendered immediately before the Answer and Tutor ca
 - [x] Production export smoke: seeded Example PDF and PPTX both completed in one attempt;
   downloaded PDF validated as 6 pages and PPTX passed `unzip -t`; disposable smoke bank was
   removed, leaving only the admin-owned Example.
+
+## Production export capacity regression (2026-09-04)
+
+- [x] Diagnose the repeated `Queued…` / `Rendering…` loop from Queue events and persisted D1 jobs.
+- [x] Route jobs through a bounded reusable two-container pool instead of allocating one Container
+  Durable Object identity per export job.
+- [x] Bound Queue consumer concurrency to the configured container pool and expose actionable,
+  structured retry/failure diagnostics.
+- [x] Improve the editor's retry label so a transient retry is distinguishable from a first queue.
+- [x] Run focused type/config tests, deploy, and verify one PDF plus one PPTX production export.
+
+Root cause: `idFromName(job_id)` created an unbounded series of distinct container instances while
+the Cloudflare application permits two live instances. The first two jobs occupied that capacity;
+later job-specific instances received platform HTTP 500 responses until their three attempts were
+exhausted. The queue itself remained healthy, which is why invocation logs showed `outcome: ok`.
+
+Production verification: the Example bank exported a four-page PDF and a structurally valid PPTX,
+both in one attempt. A temporary four-instance rollout bridge let the new fixed pool replace the two
+legacy job-named instances; production was then restored to the intended two-instance maximum.
