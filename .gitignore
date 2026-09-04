@@ -8,6 +8,7 @@
 .wrangler/
 .DS_Store
 .cloudflare/
+.quabanks-prod-credentials
 
 # Python/Bun dependencies and caches
 .venv/
