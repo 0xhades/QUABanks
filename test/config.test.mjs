@@ -10,6 +10,7 @@ test("Cloudflare bindings and export boundaries stay declared", async () => {
   const config = parseJsonc(await read("wrangler.jsonc"));
   assert.equal(config.main, "src/worker.ts");
   assert.equal(config.assets.binding, "ASSETS");
+  assert.deepEqual(config.assets.run_worker_first, ["/api/*", "/internal/*", "/assets/*"]);
   assert.equal(config.d1_databases[0].binding, "DB");
   assert.equal(config.r2_buckets[0].binding, "MEDIA");
   assert.equal(config.queues.producers[0].binding, "EXPORT_QUEUE");
@@ -20,6 +21,11 @@ test("Cloudflare bindings and export boundaries stay declared", async () => {
   const worker = await read("src/worker.ts");
   assert.match(worker, /getRandom\(env\.EXPORT_CONTAINER, EXPORT_CONTAINER_POOL_SIZE\)/);
   assert.doesNotMatch(worker, /idFromName\(row\.id\)/);
+  assert.match(worker, /"x-content-type-options": "nosniff"/);
+  const editor = await read("editor/public/app.js");
+  assert.match(editor, /artifactSignatureIsValid/);
+  assert.match(editor, /await downloadArtifact\(url,/);
+  assert.doesNotMatch(editor, /openOrDownload\(url,/);
 });
 
 test("the preserved Example packet has stable nested lecture content", async () => {

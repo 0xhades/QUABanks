@@ -301,3 +301,24 @@ exhausted. The queue itself remained healthy, which is why invocation logs showe
 Production verification: the Example bank exported a four-page PDF and a structurally valid PPTX,
 both in one attempt. A temporary four-instance rollout bridge let the new fixed pool replace the two
 legacy job-named instances; production was then restored to the intended two-instance maximum.
+
+## Browser artifact download regression (2026-09-04)
+
+- [x] Inspect the user-downloaded PDF/PPTX bytes and identify whether corruption occurred during
+  rendering, R2 storage, or browser delivery.
+- [x] Route browser navigations under `/api/*` through the Worker before the SPA asset fallback.
+- [x] Fetch artifact bytes through the authenticated API client and reject HTML/error bodies before
+  creating a PDF/PPTX download.
+- [x] Add explicit artifact media types, byte length, and no-sniff/no-store response headers.
+- [x] Run focused checks, deploy, and verify browser-shaped PDF/PPTX requests return valid file
+  signatures rather than `index.html`.
+
+Root cause confirmed from the supplied files: all three are byte-identical copies of
+`editor/public/index.html` (12,045 bytes), not renderer output. Cloudflare Static Assets' SPA
+navigation fallback handles direct artifact-link navigations before the Worker unless
+`assets.run_worker_first` explicitly includes `/api/*`.
+
+Production verification: Worker version `147113a6-7b7e-4a70-93c9-52d83c37c5ae` returned a
+392,979-byte, four-page PDF and a structurally valid 488,809-byte PPTX even when requests included
+browser navigation headers. Both completed in one container attempt; neither response passed through
+the 12,045-byte SPA shell.

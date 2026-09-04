@@ -1054,9 +1054,34 @@ async function waitForExport(statusUrl, format, label, context) {
   throw new Error(`${label} timed out while waiting for the export worker`);
 }
 
-function openOrDownload(url, filename, newTab = false) {
+function artifactSignatureIsValid(bytes, format) {
+  if (format === "pdf") {
+    return bytes.length >= 5
+      && bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44
+      && bytes[3] === 0x46 && bytes[4] === 0x2d;
+  }
+  return bytes.length >= 4
+    && bytes[0] === 0x50 && bytes[1] === 0x4b
+    && ((bytes[2] === 0x03 && bytes[3] === 0x04)
+      || (bytes[2] === 0x05 && bytes[3] === 0x06)
+      || (bytes[2] === 0x07 && bytes[3] === 0x08));
+}
+
+async function downloadArtifact(url, filename, format, newTab = false) {
+  const response = await apiFetch(url, { cache: "no-store" });
+  if (!response.ok) {
+    const data = await response.clone().json().catch(() => ({}));
+    throw new Error(data.error || `${format.toUpperCase()} artifact could not be downloaded`);
+  }
+  const blob = await response.blob();
+  const bytes = new Uint8Array(await blob.slice(0, 8).arrayBuffer());
+  if (!artifactSignatureIsValid(bytes, format)) {
+    const contentType = response.headers.get("content-type") || blob.type || "unknown content type";
+    throw new Error(`Export server returned ${contentType} instead of a valid ${format.toUpperCase()} file`);
+  }
+  const objectUrl = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
-  anchor.href = url;
+  anchor.href = objectUrl;
   anchor.download = filename;
   anchor.target = newTab ? "_blank" : "_self";
   anchor.rel = "noopener";
@@ -1064,6 +1089,7 @@ function openOrDownload(url, filename, newTab = false) {
   document.body.appendChild(anchor);
   anchor.click();
   anchor.remove();
+  window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
 }
 
 async function renderPdf() {
@@ -1080,7 +1106,7 @@ async function renderPdf() {
     if (!exportIsCurrent(context)) return;
     if (!url) throw new Error("PDF export completed without a preview URL");
     toast("PDF rendered. Opening the deterministic preview…");
-    openOrDownload(url, `${slug(rootDocument()?.title || "question-packet")}.pdf`, true);
+    await downloadArtifact(url, `${slug(rootDocument()?.title || "question-packet")}.pdf`, "pdf", true);
   } finally {
     finishExport(context);
   }
@@ -1098,7 +1124,7 @@ async function exportPptx() {
     const url = data.download_url || data.preview_url || (data.status_url ? await waitForExport(data.status_url, "pptx", "PowerPoint export", context) : null);
     if (!exportIsCurrent(context)) return;
     if (!url) throw new Error("PowerPoint export completed without a download URL");
-    openOrDownload(url, `${slug(rootDocument()?.title || "question-packet")}-editable.pptx`);
+    await downloadArtifact(url, `${slug(rootDocument()?.title || "question-packet")}-editable.pptx`, "pptx");
     toast("Editable PPTX downloaded");
   } finally {
     finishExport(context);

@@ -527,7 +527,16 @@ async function apiArtifact(request: Request, env: Env, user: User, id: string, f
   const key = format === "pdf" ? row.pdf_key : format === "pptx" ? row.pptx_key : null;
   if (!key) return error("artifact is not ready", 404);
   const object = await env.MEDIA.get(key); if (!object) return error("artifact is missing", 404);
-  return new Response(object.body, { headers: { "content-type": object.httpMetadata?.contentType || "application/octet-stream", "content-disposition": `attachment; filename="${id}.${format}"`, "cache-control": "private, max-age=60" } });
+  const contentType = format === "pdf"
+    ? "application/pdf"
+    : "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+  return new Response(object.body, { headers: {
+    "content-type": contentType,
+    "content-length": String(object.size),
+    "content-disposition": `attachment; filename="${id}.${format}"`,
+    "cache-control": "private, no-store",
+    "x-content-type-options": "nosniff",
+  } });
 }
 async function internalInput(request: Request, env: Env, id: string): Promise<Response> {
   if (request.headers.get("x-export-token") !== env.EXPORT_INTERNAL_TOKEN) return error("forbidden", 403);
