@@ -263,9 +263,10 @@ three panes. Traceability is rendered immediately before the Answer and Tutor ca
 - [x] Provision the production D1 database, private R2 bucket, Queue, and Container resources.
 - [x] Set production secrets and replace all Wrangler placeholders.
 - [x] Apply the remote migration and complete the two-user PDF/PPTX deployment smoke test.
-- [ ] Initialize QUABanks Git history, push `main` to `0xhades/QUABanks`, and verify the
-  remote tree.
-- [ ] Back up and remove only AounMED's `pdf_template`, then push that targeted deletion.
+- [x] Initialize QUABanks Git history, push `main` to `0xhades/QUABanks`, and verify the
+  remote tree (initial commit `ee297a8a90d100bac1728b83e5ee8e6629a2deff`).
+- [x] Back up and remove only AounMED's `pdf_template`, then push that targeted deletion;
+  the recoverable backup is `/private/tmp/aounmed-pdf-template-backup.2sR46/pdf_template`.
 
 ## Cloudflare deployment and smoke checkpoint (2026-09-04)
 
